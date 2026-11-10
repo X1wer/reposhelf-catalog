@@ -1,0 +1,17 @@
+{
+  "id": "aegis",
+  "name": "Aegis Authenticator",
+  "source": {
+    "provider": "github",
+    "repository": "beemdevelopment/Aegis",
+    "repositoryId": 65757761
+  },
+  "keywords": [
+    "2fa",
+    "totp",
+    "authenticator",
+    "kétfaktoros",
+    "hitelesítő"
+  ],
+  "category": "security"
+}

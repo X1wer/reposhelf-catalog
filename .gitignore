@@ -9,7 +9,7 @@ __pycache__/
 .ruff_cache/
 .cache/
 build/
-dist/
+# A dist/ a publikált (aláírandó) katalógus, ezért verziókezelt: NEM zárjuk ki.
 
 # --- Aláírókulcsok, titkok (soha ne kerüljenek a repóba; csak a NYILVÁNOS kulcs commitolható) ---
 *.key

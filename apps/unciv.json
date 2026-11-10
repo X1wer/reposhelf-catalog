@@ -1,0 +1,17 @@
+{
+  "id": "unciv",
+  "name": "Unciv",
+  "source": {
+    "provider": "github",
+    "repository": "yairm210/Unciv",
+    "repositoryId": 111605778
+  },
+  "keywords": [
+    "strategy",
+    "4x",
+    "civilization",
+    "stratégia",
+    "játék"
+  ],
+  "category": "games"
+}

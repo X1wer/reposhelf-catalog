@@ -1,0 +1,17 @@
+{
+  "id": "keepassdx",
+  "name": "KeePassDX",
+  "source": {
+    "provider": "github",
+    "repository": "Kunzisoft/KeePassDX",
+    "repositoryId": 107244490
+  },
+  "keywords": [
+    "password manager",
+    "keepass",
+    "jelszókezelő",
+    "jelszó"
+  ],
+  "category": "security",
+  "assetFilter": "^KeePassDX-.*-libre\\.apk$"
+}

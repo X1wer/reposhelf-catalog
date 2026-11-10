@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/X1wer/reposhelf-catalog/main/schema/app-entry.v1.schema.json",
+  "title": "RepoShelf catalog entry (schemaVersion 1)",
+  "description": "Egy alkalmazás katalógusbejegyzése (apps/<id>.json). Leírás: docs/SCHEMA.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "source", "category"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$",
+      "description": "Stabil, egyedi katalógusazonosító. Megegyezik a fájlnévvel. Később nem változtatható."
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "repository"],
+      "properties": {
+        "provider": { "enum": ["github"] },
+        "repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?/[A-Za-z0-9._-]{1,100}$",
+          "description": "owner/name"
+        },
+        "repositoryId": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "A szolgáltató stabil numerikus repó-azonosítója (GitHub: id). A kliens ezzel ismeri fel a repó cseréjét."
+        }
+      }
+    },
+    "packageName": {
+      "type": "string",
+      "maxLength": 255,
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+$"
+    },
+    "signingCertSha256": {
+      "type": "array",
+      "maxItems": 10,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+      "description": "A várt aláíró tanúsítvány(ok) SHA-256 ujjlenyomata, kisbetűs hex, elválasztó nélkül."
+    },
+    "minVersionCode": { "type": "integer", "minimum": 0 },
+    "keywords": {
+      "type": "array",
+      "maxItems": 30,
+      "items": { "type": "string", "minLength": 1, "maxLength": 40 }
+    },
+    "category": {
+      "enum": ["communication", "development", "education", "games", "graphics", "internet", "maps", "multimedia",
+               "productivity", "reading", "science", "security", "system", "utilities", "other"]
+    },
+    "assetFilter": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Reguláris kifejezés a kiadás telepíthető állományának nevére, ha a kiadás több változatot tartalmaz."
+    }
+  }
+}

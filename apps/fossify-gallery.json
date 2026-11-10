@@ -1,0 +1,17 @@
+{
+  "id": "fossify-gallery",
+  "name": "Fossify Gallery",
+  "source": {
+    "provider": "github",
+    "repository": "FossifyOrg/Gallery",
+    "repositoryId": 502586319
+  },
+  "keywords": [
+    "gallery",
+    "photos",
+    "galéria",
+    "képek",
+    "fotó"
+  ],
+  "category": "graphics"
+}

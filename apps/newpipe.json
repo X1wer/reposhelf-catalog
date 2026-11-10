@@ -1,0 +1,17 @@
+{
+  "id": "newpipe",
+  "name": "NewPipe",
+  "source": {
+    "provider": "github",
+    "repository": "TeamNewPipe/NewPipe",
+    "repositoryId": 41889031
+  },
+  "keywords": [
+    "youtube",
+    "video",
+    "videó",
+    "streaming",
+    "lejátszó"
+  ],
+  "category": "multimedia"
+}

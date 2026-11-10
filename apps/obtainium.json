@@ -1,0 +1,18 @@
+{
+  "id": "obtainium",
+  "name": "Obtainium",
+  "source": {
+    "provider": "github",
+    "repository": "ImranR98/Obtainium",
+    "repositoryId": 523534328
+  },
+  "keywords": [
+    "updates",
+    "app manager",
+    "github",
+    "frissítés",
+    "alkalmazáskezelő"
+  ],
+  "category": "system",
+  "assetFilter": "^(?!.*fdroid).*\\.apk$"
+}

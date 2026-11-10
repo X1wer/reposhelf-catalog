@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/X1wer/reposhelf-catalog/main/schema/catalog.v1.schema.json",
+  "title": "RepoShelf catalog (schemaVersion 1)",
+  "description": "Az összeállított katalógus (dist/v1/catalog.json). Leírás: docs/SCHEMA.md.",
+  "type": "object",
+  "required": ["schemaVersion", "catalogSerial", "generatedAt", "expiresAt", "apps"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "catalogSerial": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monoton növekvő sorszám. A kliens a korábban elfogadottnál kisebbet elutasít."
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "apps": {
+      "type": "array",
+      "maxItems": 20000,
+      "items": { "$ref": "app-entry.v1.schema.json" }
+    }
+  }
+}

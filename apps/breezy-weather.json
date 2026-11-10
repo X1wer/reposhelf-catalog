@@ -1,0 +1,16 @@
+{
+  "id": "breezy-weather",
+  "name": "Breezy Weather",
+  "source": {
+    "provider": "github",
+    "repository": "breezy-weather/breezy-weather",
+    "repositoryId": 482265185
+  },
+  "keywords": [
+    "weather",
+    "forecast",
+    "időjárás",
+    "előrejelzés"
+  ],
+  "category": "utilities"
+}

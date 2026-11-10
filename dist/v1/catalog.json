@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "catalogSerial": 1,
+  "generatedAt": "2026-11-10T00:00:00Z",
+  "expiresAt": "2027-02-08T00:00:00Z",
+  "apps": [
+    {
+      "id": "aegis",
+      "name": "Aegis Authenticator",
+      "source": {
+        "provider": "github",
+        "repository": "beemdevelopment/Aegis",
+        "repositoryId": 65757761
+      },
+      "keywords": [
+        "2fa",
+        "totp",
+        "authenticator",
+        "kétfaktoros",
+        "hitelesítő"
+      ],
+      "category": "security"
+    },
+    {
+      "id": "breezy-weather",
+      "name": "Breezy Weather",
+      "source": {
+        "provider": "github",
+        "repository": "breezy-weather/breezy-weather",
+        "repositoryId": 482265185
+      },
+      "keywords": [
+        "weather",
+        "forecast",
+        "időjárás",
+        "előrejelzés"
+      ],
+      "category": "utilities"
+    },
+    {
+      "id": "fossify-gallery",
+      "name": "Fossify Gallery",
+      "source": {
+        "provider": "github",
+        "repository": "FossifyOrg/Gallery",
+        "repositoryId": 502586319
+      },
+      "keywords": [
+        "gallery",
+        "photos",
+        "galéria",
+        "képek",
+        "fotó"
+      ],
+      "category": "graphics"
+    },
+    {
+      "id": "keepassdx",
+      "name": "KeePassDX",
+      "source": {
+        "provider": "github",
+        "repository": "Kunzisoft/KeePassDX",
+        "repositoryId": 107244490
+      },
+      "keywords": [
+        "password manager",
+        "keepass",
+        "jelszókezelő",
+        "jelszó"
+      ],
+      "category": "security",
+      "assetFilter": "^KeePassDX-.*-libre\\.apk$"
+    },
+    {
+      "id": "material-files",
+      "name": "Material Files",
+      "source": {
+        "provider": "github",
+        "repository": "zhanghai/MaterialFiles",
+        "repositoryId": 135088590
+      },
+      "keywords": [
+        "file manager",
+        "files",
+        "fájlkezelő",
+        "fájlok"
+      ],
+      "category": "system",
+      "assetFilter": "^app-release-universal\\.apk$"
+    },
+    {
+      "id": "newpipe",
+      "name": "NewPipe",
+      "source": {
+        "provider": "github",
+        "repository": "TeamNewPipe/NewPipe",
+        "repositoryId": 41889031
+      },
+      "keywords": [
+        "youtube",
+        "video",
+        "videó",
+        "streaming",
+        "lejátszó"
+      ],
+      "category": "multimedia"
+    },
+    {
+      "id": "obtainium",
+      "name": "Obtainium",
+      "source": {
+        "provider": "github",
+        "repository": "ImranR98/Obtainium",
+        "repositoryId": 523534328
+      },
+      "keywords": [
+        "updates",
+        "app manager",
+        "github",
+        "frissítés",
+        "alkalmazáskezelő"
+      ],
+      "category": "system",
+      "assetFilter": "^(?!.*fdroid).*\\.apk$"
+    },
+    {
+      "id": "organic-maps",
+      "name": "Organic Maps",
+      "source": {
+        "provider": "github",
+        "repository": "organicmaps/organicmaps",
+        "repositoryId": 324829379
+      },
+      "keywords": [
+        "maps",
+        "offline",
+        "navigation",
+        "openstreetmap",
+        "térkép",
+        "navigáció"
+      ],
+      "category": "maps"
+    },
+    {
+      "id": "seal",
+      "name": "Seal",
+      "source": {
+        "provider": "github",
+        "repository": "JunkFood02/Seal",
+        "repositoryId": 481797111
+      },
+      "keywords": [
+        "video downloader",
+        "yt-dlp",
+        "letöltő",
+        "videó",
+        "audio"
+      ],
+      "category": "multimedia"
+    },
+    {
+      "id": "unciv",
+      "name": "Unciv",
+      "source": {
+        "provider": "github",
+        "repository": "yairm210/Unciv",
+        "repositoryId": 111605778
+      },
+      "keywords": [
+        "strategy",
+        "4x",
+        "civilization",
+        "stratégia",
+        "játék"
+      ],
+      "category": "games"
+    }
+  ]
+}
