@@ -1,0 +1,38 @@
+# --- Eszközök / függőségek ---
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+build/
+dist/
+
+# --- Aláírókulcsok, titkok (soha ne kerüljenek a repóba; csak a NYILVÁNOS kulcs commitolható) ---
+*.key
+*.sec
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets/
+.env
+.env.*
+
+# --- Kifejezetten tesztcélú, NEM titkos fixture-ök (teszt-kulcsok a validációs tesztekhez) ---
+!**/tests/fixtures/**
+
+# --- IDE / OS / ideiglenes ---
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.tmp
+*.swp

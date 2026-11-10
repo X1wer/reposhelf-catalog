@@ -1,0 +1,5 @@
+# Az aláírt katalógusfájlok bájtpontosan, LF sorvégekkel tárolódnak minden platformon,
+# hogy az aláírás ellenőrzése ne függjön a git sorvég-konverziójától.
+* text=auto eol=lf
+*.png binary
+*.sig binary
