@@ -7,8 +7,8 @@ Használat (a repó gyökeréből):
     python tools/build_catalog.py --serial 2
     python tools/build_catalog.py --check      # csak ellenőrzés: érvényesek-e a bejegyzések
 
-A szkript csak a Python standard könyvtárát használja. A teljes JSON Schema-validáció, a GitHub API-alapú
-ellenőrzések és az aláírás a 7. munkamenetben kerülnek a CI-ba (docs/SUBMISSION.md).
+A szkript csak a Python standard könyvtárát használja. A CI-validáció a validate_catalog.py-ban, az aláírás a
+sign_catalog.py-ban van (docs/SUBMISSION.md).
 
 Szabályok (a kliens CatalogParser-ével összhangban, lásd docs/SCHEMA.md):
   * a fájlnév = az `id` + `.json`, az `id` egyedi és érvényes;

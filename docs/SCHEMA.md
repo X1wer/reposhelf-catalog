@@ -73,6 +73,16 @@ A katalógusba **nem** kerülhet leírás, README-részlet vagy más, harmadik f
 - Ha egy kliens a támogatottnál újabb `schemaVersion`-t kap, nem dolgozza fel. Megtartja az utolsó érvényes katalógust, és jelzi, hogy frissíteni kell az alkalmazást.
 - A hibás bejegyzést a kliens egyenként kihagyja. Ha a hibás bejegyzések aránya 20% fölött van, az egész katalógust elutasítja, és az előző marad érvényben.
 
-## Aláírás (7. munkamenet)
+## Aláírás
 
-A `dist/v1/catalog.json` mellé leválasztott aláírás kerül (`catalog.json.sig`, ECDSA P-256 / SHA-256, a pontos bájtokra). A kliens az alkalmazásba fordított nyilvános kulcsokkal ellenőrzi. Részletek: a fejlesztői dokumentáció ARCHITECTURE.md fájljának 7.3. pontja. **Az aláírás még nincs bevezetve.**
+A `dist/v1/catalog.json` mellett leválasztott aláírás van: `dist/v1/catalog.json.sig`. Az aláírás a katalógusfájl **pontos bájtjaira** vonatkozik (a `.gitattributes` LF-sorvéget rögzít, a `.sig` bináris).
+
+```json
+{"format": 1, "signatures": [{"keyId": "catalog-2026-a", "algorithm": "ecdsa-p256-sha256", "value": "<base64 DER>"}]}
+```
+
+- Algoritmus: ECDSA P-256 / SHA-256, DER-kódolt aláírás, base64. Ismeretlen `algorithm` értékű aláírást a kliens kihagy.
+- Több aláírás is lehet (kulcsrotáció). A kliens akkor fogadja el a katalógust, ha legalább egy, az alkalmazásba fordított nyilvános kulccsal (`keyId` → kulcs) készült aláírás érvényes. Hiányzó vagy érvénytelen aláírásnál a korábbi érvényes katalógus marad.
+- A nyilvános kulcsok: `keys/<keyId>.pub` (PEM, SubjectPublicKeyInfo). A privát kulcs soha nem kerül a repóba.
+- Aláírás: `python tools/sign_catalog.py --key <keyId>=<a privát kulcs útvonala a repón kívül>`; ellenőrzés: `python tools/validate_catalog.py --require-signature`.
+- **Jelenleg teszt-kulcs** (`catalog-test-2026a`) írja alá a katalógust. A valódi kulcs létrehozásáról és tárolásáról a karbantartó dönt (Q-006).

@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: 2026 RepoShelf contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# Katalógus-validáció (C. 3.3.; docs/SUBMISSION.md). Minden PR-on és a main ágon fut.
+# - Csak olvasási jog, titok nélkül; `pull_request` (nem `pull_request_target`), így idegen kód nem kap jogot.
+# - Az action commit SHA-hoz rögzített (a megjegyzésben a verzió); frissítés csak ellenőrzött SHA-val.
+# - Hálózatot (GitHub API-t) nem használ: a repó elérhetőségét az emberi jóváhagyás ellenőrzi.
+name: Katalógus-validáció
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: A validációs szkriptek tesztjei
+        run: python3 -I -m unittest discover -s tools
+
+      - name: Bejegyzések, ellentmondások, dist (PR-on az aláírás nem kötelező)
+        if: github.event_name == 'pull_request'
+        run: python3 -I tools/validate_catalog.py
+
+      - name: Bejegyzések, ellentmondások, dist és aláírás (main ág)
+        if: github.event_name == 'push'
+        run: python3 -I tools/validate_catalog.py --require-signature

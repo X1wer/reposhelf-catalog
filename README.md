@@ -5,8 +5,9 @@
 GitHubon közzétett, nyílt forráskódú Android-alkalmazások kereshető, minimális katalógusa a RepoShelf alkalmazáskezelőhöz. A katalógus csak nevet, repó-útvonalat, kulcsszavakat és kategóriát tartalmaz. Minden más adatot az alkalmazás közvetlenül a repókból kér le.
 
 - Séma: [docs/SCHEMA.md](docs/SCHEMA.md)
-- Beküldés: [docs/SUBMISSION.md](docs/SUBMISSION.md) (vázlat)
-- Összeállítás: `python tools/build_catalog.py --serial <N>` · Ellenőrzés: `python tools/build_catalog.py --check` · Tesztek: `python -m unittest discover -s tools`
+- Beküldés és jóváhagyás: [docs/SUBMISSION.md](docs/SUBMISSION.md)
+- Összeállítás: `python tools/build_catalog.py --serial <N>` · Aláírás: `python tools/sign_catalog.py --key <keyId>=<útvonal>` · Validáció: `python tools/validate_catalog.py` · Tesztek: `python -m unittest discover -s tools`
+- A katalógust jelenleg **teszt-kulcs** írja alá (`keys/catalog-test-2026a.pub`); a valódi kulcsról a karbantartó dönt.
 
 **A katalógusban szereplés nem biztonsági tanúsítás.**
 
