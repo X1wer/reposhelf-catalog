@@ -1,81 +1,131 @@
-# Beküldési szabályok
+<!-- SPDX-FileCopyrightText: 2026 RepoShelf contributors -->
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-## Mit lehet beküldeni?
+# Submission guide
 
-Olyan nyílt forráskódú Android-alkalmazást, amely:
+## What can be submitted?
 
-1. **nyilvános GitHub-repóban** van;
-2. **GitHub Releases** formában közzétett, **telepíthető APK-t** ad ki (a forráskód jelenléte önmagában nem elég; AAB nem telepíthető);
-3. a kiadott APK-kat **a fejlesztő saját kulcsával** írja alá. Nyilvános teszt- vagy debug-kulccsal aláírt kiadást nem veszünk fel, mert azzal bárki aláírhatna egy hamis frissítést;
-4. **OSI- vagy FSF-elfogadott licencű**;
-5. nem tartalmaz ismerten rosszindulatú működést, és nem kér az alapfunkciójához nem szükséges, rejtett jogosultságot.
+An open-source Android app that:
 
-**A katalógusban szereplés nem biztonsági tanúsítás.** A felvétel technikai és formai ellenőrzés, nem teljes biztonsági audit.
+1. is in a **public GitHub repository**;
+2. publishes an **installable APK** as a **GitHub Release** (source code alone is not enough; AAB files cannot be
+   installed);
+3. signs its released APKs with **the developer's own key**. Releases signed with a public test or debug key are not
+   accepted, because anyone could sign a fake update with such a key;
+4. uses an **OSI- or FSF-approved license**;
+5. contains no known malicious behavior and requests no hidden permissions that its core function does not need.
 
-## Hogyan?
+**Being listed in the catalog is not a security certification.** Inclusion is a technical and formal review, not a full
+security audit.
 
-1. Forkold a repót, és hozz létre egy új fájlt: `apps/<id>.json` (a formátum: [SCHEMA.md](SCHEMA.md)).
-2. Futtasd helyben: `python tools/validate_catalog.py` (és a tesztek: `python -m unittest discover -s tools`).
-3. Nyiss Pull Requestet a sablon szerint. A leírásban szerepeljen:
-   - a repó linkje, és hogy te vagy-e az alkalmazás fejlesztője;
-   - ha ismered: a csomagazonosító (`packageName`) és az aláíró tanúsítvány SHA-256 ujjlenyomata (`signingCertSha256`), és honnan származik (pl. a fejlesztő által közzétett érték).
-4. A `dist/` könyvtárat **ne** módosítsd: azt a karbantartók generálják és írják alá.
+By submitting, you agree that your contribution to the catalog data is dedicated to the public domain under
+[CC0 1.0](../LICENSES/CC0-1.0.txt).
 
-## Automatikus ellenőrzés (GitHub Actions, minden PR-on)
+## How?
 
-A `.github/workflows/validate.yml` a `tools/validate_catalog.py`-t futtatja. Ellenőrzi:
+1. Fork the repository and create a new file: `apps/<id>.json` (format: [SCHEMA.md](SCHEMA.md)).
+2. Run locally: `python tools/validate_catalog.py` and the tests: `python -m unittest discover -s tools` (on Windows:
+   `python -X utf8 -I …`).
+3. Open a pull request using the template. In the description include:
+   - the repository link, and whether you are the app's developer;
+   - if you know them: the package name (`packageName`) and the SHA-256 fingerprint of the signing certificate
+     (`signingCertSha256`), and where they come from (for example a value published by the developer).
+4. Do **not** change `dist/`: maintainers generate and sign it.
 
-- a JSON-szintaxist és a sémát, a kötelező mezőket, az ismeretlen mezőket;
-- az `id` egyediségét, és hogy a fájlnév egyezik vele;
-- a repó-útvonal formátumát (`owner/name`, teljes URL nem fogadható el), és hogy a repó nem szerepel-e már más azonosító alatt;
-- a metaadat-ellentmondásokat: ugyanaz a `packageName` vagy `repositoryId` két bejegyzésben, `minVersionCode` csomagnév nélkül, ismétlődő aláíró-ujjlenyomat vagy kulcsszó;
-- az `assetFilter` megengedett alakját (korlátos futási idejű reguláris kifejezés, lásd [SCHEMA.md](SCHEMA.md)), a nevekben és kulcsszavakban a láthatatlan vagy irányváltó karaktereket, az ismétlődő JSON-kulcsokat;
-- a `dist/v1/catalog.json` érvényességét, determinisztikus formáját és **az aláírását** (PR-on is: egy beküldés a `dist`-et nem módosítja, így a meglévő aláírás érvényes marad);
-- a `keys/` mappa nyilvános kulcsait (csak szabályos P-256 kulcs lehet), és kiírja, mely kulcsok számítanak megbízhatónak, illetve melyik ellenőrizte az aláírást.
+## Automatic checks (GitHub Actions, on every pull request)
 
-Az action commit SHA-hoz rögzített, a workflow csak olvasási jogot kap, titkot nem használ, és `pull_request` eseményre fut (nem `pull_request_target`-re).
+`.github/workflows/validate.yml` runs `tools/validate_catalog.py`. It checks:
 
-**Mit NEM bizonyít a zöld pipa?** A PR a saját változatában lévő validátorral és workflow-val fut. Ha egy PR az `apps/` mappán kívül bármit módosít (`tools/`, `schema/`, `keys/`, `dist/`, `.github/`, `categories.json`), az automatikus ellenőrzés eredménye önmagában semmit nem ér: lásd a jóváhagyó teendőit.
+- JSON syntax and schema, required fields, unknown fields;
+- that `id` is unique and matches the file name;
+- the repository path format (`owner/name`; a full URL is not accepted) and that the repository is not already listed
+  under another ID;
+- metadata contradictions: the same `packageName` or `repositoryId` in two entries, `minVersionCode` without a package
+  name, duplicate signer fingerprints or keywords;
+- the allowed form of `assetFilter` (a regular expression with bounded running time, see [SCHEMA.md](SCHEMA.md)),
+  invisible or bidirectional characters in names and keywords, duplicate JSON keys;
+- that `dist/v1/catalog.json` is valid, deterministic and **signed** (also on pull requests: a submission does not change
+  `dist`, so the existing signature stays valid);
+- the public keys in `keys/` (only proper P-256 keys), listing which keys are trusted and which one verified the
+  signature.
 
-## Emberi jóváhagyás
+The action is pinned to a commit SHA, the workflow has read-only permissions, uses no secrets, and runs on
+`pull_request` (not `pull_request_target`).
 
-A sikeres automatikus ellenőrzés nem elég. Egy karbantartó (CODEOWNERS) kézzel ellenőrzi:
+**What a green check does NOT prove:** a pull request runs the validator and workflow of its own version. If a pull
+request changes anything outside `apps/` (`tools/`, `schema/`, `keys/`, `dist/`, `.github/`, `categories.json`), the
+automatic result alone means nothing – see the reviewer's duties.
 
-1. a repó létezik és nyilvános; a `repositoryId` egyezik a GitHub által közölttel (`https://api.github.com/repos/<owner>/<repo>` → `id`);
-2. a legutóbbi kiadásokban van telepíthető APK, és az aláírója a fejlesztő saját kulcsa (`apksigner verify --print-certs`); ha a PR megad `signingCertSha256`-ot, az egyezik vele; ha `packageName`-et, az egyezik az APK-éval;
-3. a licenc és a fenti feltételek teljesülnek, a név és a kulcsszavak nem utánoznak más alkalmazást (hasonló írásképű, pl. cirill betűkkel írt nevekre is figyelve);
-4. **a PR csak az `apps/` mappát érinti.** Ha bármi mást is módosít:
-   - `tools/`, `.github/`, `schema/`, `categories.json`: soronkénti átnézés; a zöld validáció ilyenkor nem bizonyíték, mert a PR a saját validátorát futtatta;
-   - `keys/`: új vagy módosított nyilvános kulcsot beküldő PR-t **soha** nem olvasztunk be (a megbízható kulcsokról csak a karbantartó dönt; a validáció kimenete felsorolja, mely kulcsokat tekinti megbízhatónak);
-   - `dist/`: beküldő nem módosíthatja; ha mégis, a PR-t elutasítjuk (a `dist`-et kizárólag a karbantartó állítja elő az `apps/`-ból);
-5. meglévő bejegyzés `source` mezőjének módosítása (más repó ugyanazon `id` alatt) külön indoklást és ellenőrzést igényel: a kliens a már követett alkalmazásra nem alkalmazza a más repóra mutató bejegyzést, de az új telepítők az új repóból telepítenének.
+## Human review
 
-Jóváhagyás után a karbantartó beolvasztja a PR-t, majd helyben (vagy a kulcs tárolásáról hozott döntés szerint) újragenerálja és aláírja a katalógust:
+A passing automatic check is not enough. A maintainer (CODEOWNERS) checks by hand that:
 
+1. the repository exists and is public, and `repositoryId` matches the ID reported by GitHub
+   (`https://api.github.com/repos/<owner>/<repo>` → `id`);
+2. recent releases contain an installable APK signed with the developer's own key (`apksigner verify --print-certs`); a
+   submitted `signingCertSha256` matches it; a submitted `packageName` matches the APK's;
+3. the license and the conditions above are met, and the name and keywords do not imitate another app (including
+   look-alike spellings, for example Cyrillic letters);
+4. **the pull request touches only `apps/`.** If it changes anything else:
+   - `tools/`, `.github/`, `schema/`, `categories.json`: line-by-line review; a green validation is no evidence here,
+     because the pull request ran its own validator;
+   - `keys/`: a pull request adding or changing a public key is **never** merged (only maintainers decide which keys are
+     trusted; the validation output lists the keys it trusts);
+   - `dist/`: contributors may not change it; such a pull request is rejected (only maintainers build `dist` from `apps/`);
+5. changing the `source` of an existing entry (another repository under the same `id`) needs a separate justification and
+   review: clients do not apply an entry that now points elsewhere to an app they already follow, but new users would
+   install from the new repository.
+
+After approval a maintainer merges the pull request, then rebuilds and signs the catalog:
+
+```bash
+python tools/build_catalog.py --serial <a number higher than the current one>
 ```
-python tools/build_catalog.py --serial <a jelenleginél nagyobb szám>
-python tools/sign_catalog.py --key <keyId>=<privát kulcs a repón kívül>
+
+```bash
+python tools/sign_catalog.py --key <keyId>=<private key outside the repository>
+```
+
+```bash
 python tools/validate_catalog.py --require-signature
 ```
 
-## A repó beállításai a nyilvános közzétételkor (a tulajdonos teendői)
+When the real key is in place, a protected signing workflow will do these steps on `main` (see below).
 
-Ezek a GitHub felületén állíthatók be, a repó tartalma nem tudja kikényszeríteni őket:
+## Repository settings at publication (owner's duties)
 
-1. **A `main` ág védelme (branch protection / ruleset):** beolvasztás csak Pull Requesttel; legalább 1 jóváhagyás; „Require review from Code Owners”; „Dismiss stale approvals”; kötelező sikeres „Katalógus-validáció”; a force push és az ág törlése tiltva; a szabályok az adminisztrátorokra is vonatkozzanak (egyetlen karbantartónál ez a saját PR-okat is blokkolja: második karbantartó kell, vagy az adminisztrátori kivételt tudatosan, rögzítve kell vállalni).
-2. **Actions:** az alapértelmezett `GITHUB_TOKEN` csak olvasási jogú; külső közreműködők workflow-ja csak jóváhagyás után fusson; csak a GitHub saját és a kifejezetten felsorolt, teljes commit SHA-hoz rögzített actionök engedélyezettek; a fork PR-ok nem kapnak titkot és írási jogot.
-3. **Fiók:** kétlépcsős hitelesítés (lehetőleg hardverkulccsal) a tulajdonosi fiókon; secret scanning és push protection bekapcsolva.
-4. **A repó és az alapértelmezett ág neve nem változhat:** a kliensbe a `…/reposhelf-catalog/main/dist/v1/catalog.json` cím van fordítva.
-5. **Az aláíró workflow (a kulcs GitHub Actions secretben van):** a kulcs *environment secret* legyen egy védett környezetben (kötelező jóváhagyóval, csak a `main` ágról); a workflow csak `workflow_dispatch` vagy a `main`-re történő `push` eseményre fusson, soha PR-ra; a job maga állítsa elő a `dist`-et az `apps/`-ból, futtassa a teljes validációt, írjon alá, ellenőrizze vissza, és csak a két `dist` fájlt commitolja; a kulcs ideiglenes fájlba kerüljön (`umask 077`), `if: always()` lépés törölje, `set -x` és a titok kiírása nélkül; a sorszám az előző + 1 legyen; `concurrency` csoport akadályozza a párhuzamos futást.
-6. **Kulcsmentés és -csere:** a privát kulcsról legyen offline mentés; a kulcscsere menete a [SCHEMA.md](SCHEMA.md) „Aláírás” részében.
-7. **Az első nyilvános kiadás előtt:** a valódi kulcs létrehozása, a `keys/` és az alkalmazás kulcslistájának cseréje, újra-aláírás, a beépített katalógus frissítése. (Az alkalmazás release buildje a teszt-kulccsal szándékosan nem készíthető el.)
+These are configured in GitHub's settings; the repository content cannot enforce them:
 
-## Mit nem fogadunk el?
+1. **Protect `main`** (branch protection or ruleset): merge only through pull requests; at least one approval; "Require
+   review from Code Owners"; "Dismiss stale approvals"; the `Katalógus-validáció` (catalog validation) check required; no force pushes or branch
+   deletion; rules apply to administrators too (with a single maintainer this also blocks their own pull requests: a
+   second maintainer is needed, or the administrator exception must be a conscious, documented choice).
+2. **Actions:** the default `GITHUB_TOKEN` is read-only; workflows from outside contributors run only after approval; only
+   GitHub's own actions and explicitly listed actions pinned to full commit SHAs are allowed; pull requests from forks get
+   no secrets and no write access.
+3. **Account:** two-factor authentication (preferably a hardware key) on the owner account; secret scanning and push
+   protection enabled.
+4. **The repository and default branch names must not change:** clients have
+   `…/reposhelf-catalog/main/dist/v1/catalog.json` compiled in.
+5. **Signing workflow (the key is a GitHub Actions secret):** the key is an *environment secret* in a protected
+   environment (required reviewer, `main` only); the workflow runs only on `workflow_dispatch` or a `push` to `main`, never
+   on pull requests; the job itself builds `dist` from `apps/`, runs the full validation, signs, verifies, and commits only
+   the two `dist` files; the key goes to a temporary file (`umask 077`) deleted by an `if: always()` step, without
+   `set -x` or printing the secret; the serial is the previous one + 1; a `concurrency` group prevents parallel runs.
+   *(This workflow does not exist yet; it is created together with the real key.)*
+6. **Key backup and rotation:** keep an offline backup of the private key; rotation is described in the "Signature"
+   section of [SCHEMA.md](SCHEMA.md).
+7. **Before the first public release:** create the real key, replace the test key in `keys/` and in the app's key list,
+   re-sign, and update the app's built-in catalog. (The app's release build intentionally fails with the test key.)
 
-- Leírást, README-részletet vagy más, harmadik féltől bemásolt szöveget (a katalógusadatok CC0-1.0 alatt vannak).
-- Adatot az F-Droid vagy az IzzyOnDroid metaadataiból (azok AGPL-licencűek).
-- Más alkalmazást utánzó nevet vagy kulcsszavakat.
+## What is not accepted?
 
-## Eltávolítás
+- Descriptions, README excerpts or other text copied from third parties (the catalog data is CC0-1.0).
+- Data taken from F-Droid or IzzyOnDroid metadata (those are AGPL-licensed).
+- Names or keywords imitating another app.
 
-Egy bejegyzés eltávolítható, ha a repó megszűnik, a kiadások már nem tartalmaznak APK-t, megváltozik az aláíró, és ezt a fejlesztő nem erősíti meg, vagy biztonsági probléma merül fel.
+## Removal
+
+An entry can be removed if the repository disappears, releases no longer contain an APK, the signer changes without
+confirmation from the developer, or a security problem comes up. To request a removal, open an issue (or, for a security
+problem, use the repository's private vulnerability reporting).

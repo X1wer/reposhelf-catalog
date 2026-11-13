@@ -7,7 +7,7 @@
 # - Hálózatot (GitHub API-t) nem használ: a repó elérhetőségét az emberi jóváhagyás ellenőrzi.
 # - FIGYELEM: a PR a saját (módosított) validátorával és workflow-jával fut. A zöld pipa ezért csak akkor jelent
 #   valamit, ha a PR kizárólag az apps/ mappát érinti; minden más változás soronkénti átnézést igényel
-#   (docs/SUBMISSION.md, „A jóváhagyó teendői”).
+#   (docs/SUBMISSION.md, "Human review").
 name: Katalógus-validáció
 
 on:
