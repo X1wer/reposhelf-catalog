@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 RepoShelf contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# Csak a GitHub Actions rögzített SHA-it frissíti (D-131).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
