@@ -5,6 +5,9 @@
 # - Csak olvasási jog, titok nélkül; `pull_request` (nem `pull_request_target`), így idegen kód nem kap jogot.
 # - Az action commit SHA-hoz rögzített (a megjegyzésben a verzió); frissítés csak ellenőrzött SHA-val.
 # - Hálózatot (GitHub API-t) nem használ: a repó elérhetőségét az emberi jóváhagyás ellenőrzi.
+# - FIGYELEM: a PR a saját (módosított) validátorával és workflow-jával fut. A zöld pipa ezért csak akkor jelent
+#   valamit, ha a PR kizárólag az apps/ mappát érinti; minden más változás soronkénti átnézést igényel
+#   (docs/SUBMISSION.md, „A jóváhagyó teendői”).
 name: Katalógus-validáció
 
 on:
@@ -32,10 +35,7 @@ jobs:
       - name: A validációs szkriptek tesztjei
         run: python3 -I -m unittest discover -s tools
 
-      - name: Bejegyzések, ellentmondások, dist (PR-on az aláírás nem kötelező)
-        if: github.event_name == 'pull_request'
-        run: python3 -I tools/validate_catalog.py
-
-      - name: Bejegyzések, ellentmondások, dist és aláírás (main ág)
-        if: github.event_name == 'push'
+      # Az aláírás PR-on is kötelező: egy beküldés csak az apps/ mappát módosítja, így a meglévő dist és az
+      # aláírása érvényes marad. A dist-et lecserélő vagy az aláírást törlő PR így már itt elbukik.
+      - name: Bejegyzések, ellentmondások, dist és aláírás
         run: python3 -I tools/validate_catalog.py --require-signature

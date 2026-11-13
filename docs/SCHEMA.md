@@ -32,10 +32,10 @@ A katalógus a GitHubon tárolt, nyilvános alkalmazáslista. **Csak a keresésh
 | Mező | Kötelező | Jelentés |
 |---|---|---|
 | `schemaVersion` | igen | A séma fő verziója. A kliens csak az általa ismert fő verziót dolgozza fel (lásd lent). |
-| `catalogSerial` | igen | Monoton növekvő egész szám. A kliens a már elfogadottnál kisebb sorszámú katalógust elutasítja (visszagörgetés elleni védelem). Azonos sorszám csak azonos tartalommal fogadható el. |
-| `generatedAt` | igen | Az összeállítás ideje (ISO-8601, UTC). |
-| `expiresAt` | igen | Eddig tekinthető frissnek a katalógus. Utána a kliens figyelmeztet, hogy a katalógus elavult lehet, de böngészhető marad. |
-| `apps` | igen | A bejegyzések listája (legfeljebb 20 000). |
+| `catalogSerial` | igen | Monoton növekvő egész szám, legfeljebb 2^40. A kliens a már elfogadottnál kisebb sorszámú katalógust elutasítja (visszagörgetés elleni védelem). Azonos sorszám csak azonos tartalommal fogadható el. A sorszám nem léptethető vissza, ezért a `build_catalog.py` egyszerre legfeljebb 1000-rel engedi növelni (elírás ellen). |
+| `generatedAt` | igen | Az összeállítás ideje (ISO-8601, UTC). A kliens a 24 óránál távolabbi jövőben készült katalógust elutasítja. |
+| `expiresAt` | igen | Eddig tekinthető frissnek a katalógus (a `generatedAt` után legfeljebb 366 nappal; a javasolt érték 90 nap). **A már lejárt katalógust a kliens a hálózatról nem veszi át** (egy visszajátszott régi katalógus nem válthatja le az újabbat): a meglévő katalógusa marad, figyelmeztetéssel, hogy elavult lehet. A karbantartónak ezért a lejárat előtt újra kell generálnia és alá kell írnia a katalógust. |
+| `apps` | igen | A bejegyzések listája (1 – 20 000). Üres katalógust a kliens nem fogad el. |
 
 ## Egy bejegyzés (`apps/<id>.json`)
 
@@ -53,16 +53,33 @@ A katalógus a GitHubon tárolt, nyilvános alkalmazáslista. **Csak a keresésh
 | Mező | Kötelező | Szabály | Mire jó |
 |---|---|---|---|
 | `id` | igen | `^[a-z0-9][a-z0-9._-]{1,63}$`, egyedi, a fájlnévvel egyezik | Stabil katalógusazonosító. Publikálás után nem változtatható. |
-| `name` | igen | 1–100 karakter | Megjelenített név, keresés. |
+| `name` | igen | 1–100 karakter (UTF-16 egységben); vezérlő-, láthatatlan és irányváltó karakter nélkül | Megjelenített név, keresés. |
 | `source.provider` | igen | jelenleg csak `github` | Forrásszolgáltató. Az ismeretlen szolgáltatójú bejegyzést a kliens kihagyja (előre-kompatibilitás). |
 | `source.repository` | igen | `owner/name`, GitHub-névszabályok | A repó szöveges útvonala. |
 | `source.repositoryId` | ajánlott | pozitív egész | A GitHub stabil repó-azonosítója. Ha a név alatt egyszer csak más azonosítójú repó jelenik meg (a régit törölték, és valaki újra létrehozta), a kliens nem frissít belőle (repojacking elleni védelem). |
 | `packageName` | nem | Android-csomagnév | A várt csomagazonosító. Eltérés esetén a kliens nem telepít. |
 | `signingCertSha256` | nem | legfeljebb 10 darab kisbetűs, 64 jegyű hex | A várt aláíró tanúsítvány(ok) ujjlenyomata. Ha meg van adva, ez erősebb az első telepítéskor rögzített („trust on first use”) aláírónál. |
 | `minVersionCode` | nem | ≥ 0 | Ennél régebbi verziót a kliens nem telepít. |
-| `keywords` | nem | legfeljebb 30 darab, egyenként 1–40 karakter | Keresési kulcsszavak, angolul és magyarul is. A kliens ékezet- és kis/nagybetű-függetlenül keres. |
+| `keywords` | nem | legfeljebb 30 darab, egyenként 1–40 karakter; láthatatlan karakter nélkül | Keresési kulcsszavak, angolul és magyarul is. A kliens ékezet- és kis/nagybetű-függetlenül keres. |
 | `category` | igen | a `categories.json` egyik eleme | Kategória. Az ismeretlen kategóriát a kliens `other`-ként kezeli. |
-| `assetFilter` | nem | legfeljebb 200 karakteres reguláris kifejezés | Ha egy kiadás több változatot tartalmaz (pl. F-Droid- és GitHub-build), ez választja ki a telepíthető állományt. |
+| `assetFilter` | nem | legfeljebb 200 karakteres, **korlátozott** reguláris kifejezés (lásd lent) | Ha egy kiadás több változatot tartalmaz (pl. F-Droid- és GitHub-build), ez választja ki a telepíthető állományt. |
+
+### Az `assetFilter` megengedett alakja
+
+A szűrő az eszközön fut, a repó tulajdonosa által megadott állományneveken. Egy tetszőleges reguláris kifejezés célzottan elnevezett állománnyal megakaszthatná a klienst (ReDoS), ezért csak olyan minta fogadható el, amelynek a futási ideje kiszámíthatóan korlátos. A kliens (`AssetFilterSyntax`) és a validátor (`tools/build_catalog.py`) ugyanazt a szabályt alkalmazza:
+
+- csak nyomtatható ASCII karakter;
+- megengedett: literálok, `.`, karakterosztály (`[a-z0-9.]`, beágyazás nélkül), `\d` `\w` `\s`, kiléptetett írásjel (`\.`), `^` `$`, választás (`a|b`), csoport (`(...)`, `(?:...)`), előretekintés (`(?=...)`, `(?!...)`);
+- ismétlés (`*`, `+`, `?`) **csak egyetlen karakterre vagy karakterosztályra** alkalmazható, csoportra nem; nincs lusta (`*?`), birtokos (`*+`) vagy számlált (`{2,5}`) ismétlés, visszahivatkozás, hátratekintés, névvel ellátott csoport, kapcsoló (`(?i)`);
+- költségkorlát: 8 pont minden `*` és `+`, 1 pont minden `?` és `|`, további 8 pont, ha a minta nem `^` jellel kezdődik (vagy a legfelső szinten `|` van benne); az összeg legfeljebb 22. Gyakorlatban: `^`-val rögzített mintában legfeljebb két `*` / `+` lehet.
+
+| Jó | Nem fogadható el | Helyette |
+|---|---|---|
+| `^app-[0-9.]+-release\.apk$` | `^app-\d+\.\d+\.\d+-release\.apk$` (három `+`) | egy karakterosztály: `[0-9.]+` |
+| `^(?!.*fdroid).*\.apk$` | `^(app-?)+release\.apk$` (ismételt csoport) | `^app-?release\.apk$` |
+| `^app-(arm64-v8a\|universal)-release\.apk$` | `^app(?:-foss)?\.apk$` (választható csoport) | `^(?:app\|app-foss)\.apk$` |
+
+Az állomány kiválasztásához nem kell a teljes nevet leírni: az ABI szerinti választást a kliens maga végzi.
 
 A katalógusba **nem** kerülhet leírás, README-részlet vagy más, harmadik féltől bemásolt szöveg. Ennek két oka van: a katalógusadatok licence (CC0-1.0), és a „minimális adat” elv. Az F-Droid és az IzzyOnDroid metaadatai AGPL-licencűek, onnan nem szabad adatot átvenni.
 
@@ -71,7 +88,8 @@ A katalógusba **nem** kerülhet leírás, README-részlet vagy más, harmadik f
 - **Visszafelé kompatibilis bővítés** (új, opcionális mező): a `schemaVersion` nem változik, a régi kliensek az ismeretlen mezőt figyelmen kívül hagyják.
 - **Nem kompatibilis változás:** új fő verzió (`schemaVersion: 2`), **új útvonalon** (`dist/v2/catalog.json`). Az átmeneti időszakban a `dist/v1/` is frissül, így a régi kliensek tovább működnek.
 - Ha egy kliens a támogatottnál újabb `schemaVersion`-t kap, nem dolgozza fel. Megtartja az utolsó érvényes katalógust, és jelzi, hogy frissíteni kell az alkalmazást.
-- A hibás bejegyzést a kliens egyenként kihagyja. Ha a hibás bejegyzések aránya 20% fölött van, az egész katalógust elutasítja, és az előző marad érvényben.
+- A hibás bejegyzést a kliens egyenként kihagyja. Ha a hibás bejegyzések aránya 20% fölött van, az egész katalógust elutasítja, és az előző marad érvényben. Az ismeretlen szolgáltatójú bejegyzés nem hibás: kimarad, és az arányba sem számít bele.
+- **A validátor soha nem lehet megengedőbb a kliensnél.** Amit a kliens elutasítana, azt a `tools/build_catalog.py`-nak is el kell utasítania; a két szabálykészlet módosítása együtt történik (a kliens `BundledCatalogTest` tesztje ellenőrzi, hogy a közzétett katalógus minden bejegyzését elfogadja).
 
 ## Aláírás
 
@@ -83,6 +101,7 @@ A `dist/v1/catalog.json` mellett leválasztott aláírás van: `dist/v1/catalog.
 
 - Algoritmus: ECDSA P-256 / SHA-256, DER-kódolt aláírás, base64. Ismeretlen `algorithm` értékű aláírást a kliens kihagy.
 - Több aláírás is lehet (kulcsrotáció). A kliens akkor fogadja el a katalógust, ha legalább egy, az alkalmazásba fordított nyilvános kulccsal (`keyId` → kulcs) készült aláírás érvényes. Hiányzó vagy érvénytelen aláírásnál a korábbi érvényes katalógus marad.
-- A nyilvános kulcsok: `keys/<keyId>.pub` (PEM, SubjectPublicKeyInfo). A privát kulcs soha nem kerül a repóba.
-- Aláírás: `python tools/sign_catalog.py --key <keyId>=<a privát kulcs útvonala a repón kívül>`; ellenőrzés: `python tools/validate_catalog.py --require-signature`.
+- A nyilvános kulcsok: `keys/<keyId>.pub` (PEM, SubjectPublicKeyInfo; csak P-256 / secp256r1). A privát kulcs soha nem kerül a repóba.
+- Aláírás: `python tools/sign_catalog.py --key <keyId>=<a privát kulcs útvonala a repón kívül>`; ellenőrzés: `python tools/validate_catalog.py --require-signature`. Az aláíró eszköz csak érvényes, az `apps/` jelenlegi tartalmából készült `dist`-et ír alá, csak olyan kulccsal, amelynek a nyilvános része a `keys/<keyId>.pub`, és az elkészült aláírást vissza is ellenőrzi.
+- **Kulcscsere és visszavonás:** a kliens megjegyzi, melyik kulccsal fogadta el a tárolt katalógust. Ha egy alkalmazásfrissítés után ez a kulcs már nincs a megbízhatók között, a tárolt katalógust eldobja, és a beépítettből indul újra. Kulcscserénél ezért az átmeneti időszakban a katalógust mindkét kulccsal alá kell írni, és a régi kulcs csak azután vehető ki az alkalmazásból, hogy az új kulcsot ismerő kiadás elterjedt.
 - **Jelenleg teszt-kulcs** (`catalog-test-2026a`) írja alá a katalógust. A valódi kulcs létrehozásáról és tárolásáról a karbantartó dönt (Q-006).

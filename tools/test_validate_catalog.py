@@ -149,5 +149,108 @@ class SignatureTest(unittest.TestCase):
             sc.sign(self.repo.root, [("test-key", inside)], OPENSSL)
 
 
+class AuditHardeningTest(unittest.TestCase):
+    """Biztonsági audit: CAT-03, CAT-04 (dist-korlátok), CAT-08 (aláírás nélküli dist), CAT-12 / CAT-13 (kulcsok, aláírás)."""
+
+    def setUp(self):
+        self.repo = Repo([entry("a-app", "o/a")])
+
+    def tearDown(self):
+        self.repo.close()
+
+    def rewrite_dist(self, **changes):
+        path = self.repo.root / "dist" / "v1" / "catalog.json"
+        catalog = json.loads(path.read_text(encoding="utf-8"))
+        catalog.update(changes)
+        path.write_bytes(bc.serialize(catalog))
+        return "\n".join(vc.validate_dist(self.repo.root, {"system"})[0])
+
+    def test_dist_limits_match_the_client(self):
+        self.assertEqual("", self.rewrite_dist())
+        self.assertIn("catalogSerial", self.rewrite_dist(catalogSerial=bc.MAX_SERIAL + 1))
+        self.assertIn("érvényesség", self.rewrite_dist(catalogSerial=1, expiresAt="2028-01-01T00:00:00Z"))
+        self.assertIn("2020 és 2100", self.rewrite_dist(generatedAt="1999-01-01T00:00:00Z", expiresAt="1999-03-01T00:00:00Z"))
+        self.assertIn("üres apps", self.rewrite_dist(generatedAt="2026-11-12T00:00:00Z", expiresAt="2027-02-10T00:00:00Z", apps=[]))
+
+    def test_dist_with_duplicate_keys_is_rejected(self):
+        path = self.repo.root / "dist" / "v1" / "catalog.json"
+        path.write_text('{"schemaVersion":1,"schemaVersion":1,"catalogSerial":1,"apps":[]}', encoding="utf-8")
+        self.assertIn("hibás JSON", "\n".join(vc.validate_dist(self.repo.root, {"system"})[0]))
+
+    @unittest.skipIf(OPENSSL is None, "nincs openssl")
+    def test_only_p256_public_keys_are_trusted(self):
+        keys = self.repo.root / "keys"
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = pathlib.Path(tmp)
+            good, p384, rsa = tmp_path / "good.key", tmp_path / "p384.key", tmp_path / "rsa.key"
+            subprocess.run([OPENSSL, "ecparam", "-name", "prime256v1", "-genkey", "-noout", "-out", str(good)], check=True, capture_output=True)
+            subprocess.run([OPENSSL, "ecparam", "-name", "secp384r1", "-genkey", "-noout", "-out", str(p384)], check=True, capture_output=True)
+            subprocess.run([OPENSSL, "genrsa", "-out", str(rsa), "2048"], check=True, capture_output=True)
+            subprocess.run([OPENSSL, "pkey", "-in", str(good), "-pubout", "-out", str(keys / "good-key.pub")], check=True, capture_output=True)
+            subprocess.run([OPENSSL, "pkey", "-in", str(p384), "-pubout", "-out", str(keys / "p384-key.pub")], check=True, capture_output=True)
+            subprocess.run([OPENSSL, "pkey", "-in", str(rsa), "-pubout", "-out", str(keys / "rsa-key.pub")], check=True, capture_output=True)
+            (keys / "garbage.pub").write_text("not a key", encoding="utf-8")
+            trusted, problems = vc.trusted_keys(self.repo.root)
+            self.assertEqual(["good-key"], sorted(trusted))
+            self.assertEqual(3, len(problems))
+            self.assertIsNotNone(vc.read_p256_public_key(keys / "good-key.pub"))
+            # A hibás kulcsok a validációt is megbuktatják (nem maradhatnak észrevétlenül a repóban).
+            self.assertTrue(any("p384-key.pub" in p for p in vc.validate(self.repo.root, require_signature=False, openssl=OPENSSL)[0]))
+            # Egy P-384 kulccsal készült (de p256-nak címkézett) aláírás nem érvényes.
+            for bad in ("p384-key.pub", "rsa-key.pub", "garbage.pub"):
+                (keys / bad).unlink()
+            sc.sign(self.repo.root, [("good-key", good)], OPENSSL)
+            self.assertEqual(("valid", "good-key"), vc.verify_signature(self.repo.root, OPENSSL))
+            with self.assertRaises(sc.SigningError):
+                sc.sign(self.repo.root, [("p384-key", p384)], OPENSSL)
+
+    @unittest.skipIf(OPENSSL is None, "nincs openssl")
+    def test_signing_refuses_a_dist_that_is_not_built_from_apps(self):
+        keys = self.repo.root / "keys"
+        with tempfile.TemporaryDirectory() as tmp:
+            private, other = pathlib.Path(tmp) / "k.key", pathlib.Path(tmp) / "other.key"
+            for key in (private, other):
+                subprocess.run([OPENSSL, "ecparam", "-name", "prime256v1", "-genkey", "-noout", "-out", str(key)], check=True, capture_output=True)
+            # Nincs közzétett nyilvános kulcs ehhez az azonosítóhoz.
+            with self.assertRaises(sc.SigningError):
+                sc.sign(self.repo.root, [("test-key", private)], OPENSSL)
+            subprocess.run([OPENSSL, "pkey", "-in", str(private), "-pubout", "-out", str(keys / "test-key.pub")], check=True, capture_output=True)
+            # Más privát kulcs, mint amelynek a nyilvános része a repóban van.
+            with self.assertRaises(sc.SigningError):
+                sc.sign(self.repo.root, [("test-key", other)], OPENSSL)
+            sig = self.repo.root / "dist" / "v1" / "catalog.json.sig"
+            self.assertFalse(sig.exists())
+            # Az apps/ megváltozott, a dist nem lett újragenerálva.
+            (self.repo.root / "apps" / "b-app.json").write_text(json.dumps(entry("b-app", "o/b")), encoding="utf-8")
+            with self.assertRaises(sc.SigningError) as raised:
+                sc.sign(self.repo.root, [("test-key", private)], OPENSSL)
+            self.assertIn("apps/", str(raised.exception))
+            self.repo.build()
+            # Kézzel módosított (nem determinisztikus) dist.
+            path = self.repo.root / "dist" / "v1" / "catalog.json"
+            path.write_text(json.dumps(json.loads(path.read_text(encoding="utf-8"))), encoding="utf-8")
+            with self.assertRaises(sc.SigningError):
+                sc.sign(self.repo.root, [("test-key", private)], OPENSSL)
+            self.assertFalse(sig.exists(), "érvénytelen dist nem kaphat aláírást")
+            self.repo.build()
+            sc.sign(self.repo.root, [("test-key", private)], OPENSSL)
+            self.assertEqual(("valid", "test-key"), vc.verify_signature(self.repo.root, OPENSSL))
+
+    @unittest.skipIf(OPENSSL is None, "nincs openssl")
+    def test_replaced_dist_without_a_new_signature_fails_validation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            private = pathlib.Path(tmp) / "k.key"
+            subprocess.run([OPENSSL, "ecparam", "-name", "prime256v1", "-genkey", "-noout", "-out", str(private)], check=True, capture_output=True)
+            subprocess.run([OPENSSL, "pkey", "-in", str(private), "-pubout", "-out", str(self.repo.root / "keys" / "test-key.pub")], check=True, capture_output=True)
+            sc.sign(self.repo.root, [("test-key", private)], OPENSSL)
+            # Egy PR lecseréli a dist-et (szabályos alakban), a régi aláírás marad: érvénytelen.
+            (self.repo.root / "apps" / "evil.json").write_text(json.dumps(entry("evil", "evil/app")), encoding="utf-8")
+            self.repo.build()
+            self.assertTrue(any("érvénytelen aláírás" in p for p in vc.validate(self.repo.root, require_signature=True, openssl=OPENSSL)[0]))
+            # …vagy törli az aláírást: a kötelező aláírás hiánya hiba (a workflow PR-on is megköveteli).
+            (self.repo.root / "dist" / "v1" / "catalog.json.sig").unlink()
+            self.assertIn("dist: hiányzik a catalog.json.sig", vc.validate(self.repo.root, require_signature=True, openssl=OPENSSL)[0])
+
+
 if __name__ == "__main__":
     unittest.main()

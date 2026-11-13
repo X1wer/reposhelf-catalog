@@ -32,6 +32,45 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import build_catalog as bc  # noqa: E402
 
 MAX_SIGNATURE_FILE = 16 * 1024
+# Egy P-256 (secp256r1) nyilvános kulcs SubjectPublicKeyInfo DER-alakjának eleje (tömörítetlen pont, 91 bájt összesen).
+P256_SPKI_PREFIX = bytes.fromhex("3059301306072a8648ce3d020106082a8648ce3d03010703420004")
+P256_SPKI_LENGTH = 91
+
+
+def read_p256_public_key(path: pathlib.Path) -> bytes | None:
+    """A PEM-fájl DER-tartalma, ha szabályos P-256 nyilvános kulcs; különben `None`.
+
+    A kliens csak secp256r1 kulcsot fogad el, és az aláírás `ecdsa-p256-sha256` címkét kap: más görbéjű vagy típusú
+    kulcs (pl. RSA, P-384) itt sem számíthat megbízhatónak. Szimbolikus linket nem követünk.
+    """
+    if path.is_symlink() or not path.is_file():
+        return None
+    try:
+        lines = [line.strip() for line in path.read_text(encoding="ascii").strip().splitlines()]
+    except (OSError, UnicodeDecodeError):
+        return None
+    if len(lines) < 3 or lines[0] != "-----BEGIN PUBLIC KEY-----" or lines[-1] != "-----END PUBLIC KEY-----":
+        return None
+    try:
+        der = base64.b64decode("".join(lines[1:-1]), validate=True)
+    except ValueError:
+        return None
+    return der if len(der) == P256_SPKI_LENGTH and der.startswith(P256_SPKI_PREFIX) else None
+
+
+def trusted_keys(root: pathlib.Path) -> tuple[dict[str, pathlib.Path], list[str]]:
+    """(kulcsazonosító → fájl, hibák): a `keys/*.pub` fájlok közül csak a szabályos P-256 kulcsok megbízhatók."""
+    keys: dict[str, pathlib.Path] = {}
+    problems: list[str] = []
+    for path in sorted((root / "keys").glob("*.pub")):
+        key_id = path.name[: -len(".pub")]
+        if not bc.ID_RE.fullmatch(key_id):
+            problems.append(f"keys/{path.name}: érvénytelen kulcsazonosító")
+        elif read_p256_public_key(path) is None:
+            problems.append(f"keys/{path.name}: nem szabályos P-256 (secp256r1) nyilvános kulcs")
+        else:
+            keys[key_id] = path
+    return keys, problems
 
 
 def contradictions(entries: list[dict]) -> list[str]:
@@ -76,8 +115,8 @@ def validate_dist(root: pathlib.Path, categories: set[str]) -> tuple[list[str], 
         return ["hiányzik a dist/v1/catalog.json"], []
     raw = path.read_bytes()
     try:
-        catalog = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        catalog = json.loads(raw.decode("utf-8"), object_pairs_hook=bc.reject_duplicate_keys)
+    except (UnicodeDecodeError, ValueError) as exc:
         return [f"dist: hibás JSON ({exc})"], []
     problems: list[str] = []
     if not isinstance(catalog, dict):
@@ -85,16 +124,22 @@ def validate_dist(root: pathlib.Path, categories: set[str]) -> tuple[list[str], 
     if catalog.get("schemaVersion") != bc.SCHEMA_VERSION:
         problems.append("dist: a schemaVersion 1 legyen")
     serial = catalog.get("catalogSerial")
-    if not bc._is_int(serial) or serial < 1:
-        problems.append("dist: a catalogSerial pozitív egész")
+    if not bc._is_int(serial) or not 1 <= serial <= bc.MAX_SERIAL:
+        problems.append(f"dist: a catalogSerial 1 és {bc.MAX_SERIAL} közötti egész")
     generated, expires = _parse_time(catalog.get("generatedAt")), _parse_time(catalog.get("expiresAt"))
     if generated is None or expires is None:
         problems.append("dist: hibás generatedAt / expiresAt (YYYY-MM-DDTHH:MM:SSZ)")
     elif expires <= generated:
         problems.append("dist: az expiresAt a generatedAt után legyen")
+    elif expires - generated > dt.timedelta(days=bc.MAX_VALIDITY_DAYS):
+        problems.append(f"dist: az érvényesség legfeljebb {bc.MAX_VALIDITY_DAYS} nap lehet (a kliensek a hosszabbat elutasítják)")
+    elif not 2020 <= generated.year or expires.year >= 2100:
+        problems.append("dist: a generatedAt / expiresAt 2020 és 2100 közé essen")
     apps = catalog.get("apps")
     if not isinstance(apps, list):
         return problems + ["dist: hiányzó apps lista"], []
+    if not apps:
+        problems.append("dist: üres apps lista (a kliensek elutasítanák)")
     ids: set[str] = set()
     for app in apps:
         app_id = app.get("id") if isinstance(app, dict) else None
@@ -125,7 +170,7 @@ def verify_signature(root: pathlib.Path, openssl: str = "openssl") -> tuple[str,
             return "invalid", "ismeretlen aláírásformátum"
     except (ValueError, KeyError, TypeError):
         return "invalid", "hibás aláírásfájl"
-    keys = {p.name[: -len(".pub")]: p for p in sorted((root / "keys").glob("*.pub"))}
+    keys, _ = trusted_keys(root)
     with tempfile.TemporaryDirectory() as tmp:
         for i, sig in enumerate(signatures):
             if not isinstance(sig, dict) or sig.get("algorithm") != "ecdsa-p256-sha256":
@@ -163,6 +208,11 @@ def validate(root: pathlib.Path, require_signature: bool, openssl: str = "openss
     problems.extend(dist_problems)
     if entries and dist_apps and sorted(entries, key=lambda e: e["id"]) != dist_apps:
         notes.append("az apps/ és a dist/ eltér: a karbantartó a beolvasztás után újragenerálja és újra aláírja a dist-et")
+    keys, key_problems = trusted_keys(root)
+    problems.extend(key_problems)
+    # A megbízható kulcsok listája a repóból jön: egy PR ide saját kulcsot is tehet. A jóváhagyó ebből látja, mely
+    # kulcsok számítanak megbízhatónak, és melyik ellenőrizte az aláírást (docs/SUBMISSION.md).
+    notes.append("megbízható kulcsok a keys/ mappában: " + (", ".join(sorted(keys)) or "nincs"))
     status, detail = verify_signature(root, openssl)
     if status == "valid":
         notes.append(f"aláírás rendben ({detail})")

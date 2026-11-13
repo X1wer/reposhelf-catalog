@@ -22,6 +22,10 @@ import re
 import subprocess
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import build_catalog as bc  # noqa: E402
+import validate_catalog as vc  # noqa: E402
+
 ALGORITHM = "ecdsa-p256-sha256"
 SIGNATURE_FORMAT = 1
 KEY_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{1,63}$")
@@ -50,6 +54,33 @@ def sign_bytes(catalog: pathlib.Path, key: pathlib.Path, openssl: str = "openssl
     return result.stdout
 
 
+def public_key_der(key: pathlib.Path, openssl: str = "openssl") -> bytes:
+    """A privát kulcshoz tartozó nyilvános kulcs (SubjectPublicKeyInfo, DER)."""
+    result = subprocess.run([openssl, "pkey", "-in", str(key), "-pubout", "-outform", "DER"], capture_output=True, check=False)
+    if result.returncode != 0 or not result.stdout:
+        raise SigningError(f"a kulcs nem olvasható ({key.name})")
+    return result.stdout
+
+
+def check_dist(root: pathlib.Path) -> None:
+    """Aláírás előtt: a dist érvényes, és pontosan az apps/ jelenlegi tartalmából készült.
+
+    Az aláírás a kliensek számára hitelesíti a fájlt, ezért kézzel módosított, érvénytelen vagy az apps/-tól eltérő
+    (pl. egy PR-ban becsempészett) dist soha nem kaphat aláírást.
+    """
+    try:
+        entries = bc.load_entries(root)
+    except bc.CatalogError as exc:
+        raise SigningError(f"érvénytelen bejegyzés(ek):\n{exc}") from exc
+    categories = set(json.loads((root / "categories.json").read_text(encoding="utf-8"))["categories"])
+    problems, dist_apps = vc.validate_dist(root, categories)
+    problems = problems + vc.contradictions(entries)
+    if problems:
+        raise SigningError("a dist nem írható alá:\n" + "\n".join(problems))
+    if sorted(entries, key=lambda e: e["id"]) != dist_apps:
+        raise SigningError("a dist nem az apps/ jelenlegi tartalmából készült (előbb: tools/build_catalog.py --serial N)")
+
+
 def build_signature_file(signatures: list[tuple[str, bytes]]) -> bytes:
     document = {
         "format": SIGNATURE_FORMAT,
@@ -69,15 +100,28 @@ def sign(root: pathlib.Path, keys: list[tuple[str, pathlib.Path]], openssl: str 
         raise SigningError("legalább egy --key kell")
     signatures: list[tuple[str, bytes]] = []
     for key_id, key_path in keys:
-        if not KEY_ID_RE.match(key_id):
+        if not KEY_ID_RE.fullmatch(key_id):
             raise SigningError(f"érvénytelen kulcsazonosító: {key_id!r}")
         if _inside(key_path, root):
             raise SigningError(f"a privát kulcs nem lehet a repóban: {key_path}")
         if not key_path.is_file():
             raise SigningError(f"a kulcsfájl nem található: {key_path}")
+        # A kulcsnak P-256-nak kell lennie, és a nyilvános részének egyeznie kell a repóban közzétett keys/<id>.pub-bal:
+        # különben a kliensek (és a validátor) úgysem fogadnák el, vagy rossz kulcs kerülne használatba.
+        published = vc.read_p256_public_key(root / "keys" / f"{key_id}.pub")
+        if published is None:
+            raise SigningError(f"hiányzik vagy nem P-256 nyilvános kulcs: keys/{key_id}.pub")
+        if public_key_der(key_path, openssl) != published:
+            raise SigningError(f"a megadott privát kulcs nem a keys/{key_id}.pub párja")
         signatures.append((key_id, sign_bytes(catalog, key_path, openssl)))
+    check_dist(root)
     out = catalog.with_name("catalog.json.sig")
     out.write_bytes(build_signature_file(signatures))
+    # Az elkészült aláírás visszaellenőrzése ugyanazzal a kóddal, amellyel a CI ellenőriz.
+    status, detail = vc.verify_signature(root, openssl)
+    if status != "valid":
+        out.unlink()
+        raise SigningError(f"az elkészült aláírás nem ellenőrizhető: {detail}")
     return out
 
 

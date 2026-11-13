@@ -23,8 +23,7 @@ secrets/
 .env
 .env.*
 
-# --- Kifejezetten tesztcélú, NEM titkos fixture-ök (teszt-kulcsok a validációs tesztekhez) ---
-!**/tests/fixtures/**
+# A tesztek a kulcsaikat futásidőben, ideiglenes könyvtárban generálják: kulcsfájl semmilyen mappából nem commitolható.
 
 # --- IDE / OS / ideiglenes ---
 .idea/
