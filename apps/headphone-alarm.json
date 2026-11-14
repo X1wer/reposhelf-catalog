@@ -1,0 +1,26 @@
+{
+  "id": "headphone-alarm",
+  "name": "FülesÉbresztő",
+  "source": {
+    "provider": "github",
+    "repository": "X1wer/HeadphoneAlarm",
+    "repositoryId": 1450285535
+  },
+  "packageName": "hu.ulpifex.fulesebreszto",
+  "signingCertSha256": [
+    "7aa8f53bc27116f891e8539e8f0914918356bbb918e6a0261360552e0d67b3d7"
+  ],
+  "keywords": [
+    "alarm",
+    "alarm clock",
+    "headphones",
+    "headphone alarm",
+    "HeadphoneAlarm",
+    "wake up",
+    "ébresztő",
+    "ébresztőóra",
+    "fülhallgató",
+    "fülhallgatós ébresztő"
+  ],
+  "category": "utilities"
+}
