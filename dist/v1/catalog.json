@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "catalogSerial": 4,
-  "generatedAt": "2026-11-14T18:29:41Z",
-  "expiresAt": "2027-02-12T18:29:41Z",
+  "catalogSerial": 5,
+  "generatedAt": "2026-11-14T18:49:28Z",
+  "expiresAt": "2027-02-12T18:49:28Z",
   "apps": [
     {
       "id": "headphone-alarm",
-      "name": "FülesÉbresztő",
+      "name": "Headphone Alarm",
       "source": {
         "provider": "github",
         "repository": "X1wer/HeadphoneAlarm",
@@ -26,6 +26,7 @@
         "ébresztő",
         "ébresztőóra",
         "fülhallgató",
+        "FülesÉbresztő",
         "fülhallgatós ébresztő"
       ],
       "category": "utilities"
