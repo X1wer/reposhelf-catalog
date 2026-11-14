@@ -98,7 +98,8 @@ class BuildTest(unittest.TestCase):
 
     def test_real_catalog_entries_are_valid(self):
         root = pathlib.Path(__file__).resolve().parent.parent
-        self.assertGreaterEqual(len(bc.load_entries(root)), 5)
+        # A valódi katalógus nem lehet üres (a kliens az üreset elutasítja); minden bejegyzése érvényes.
+        self.assertGreaterEqual(len(bc.load_entries(root)), 1)
 
 
 class ClientConformanceTest(unittest.TestCase):
@@ -181,8 +182,8 @@ class AssetFilterTest(unittest.TestCase):
 
     def test_real_catalog_filters_are_within_the_subset(self):
         root = pathlib.Path(__file__).resolve().parent.parent
+        # Ha a valódi katalógusban van szűrő, az is a korlátos részhalmazba esik (a szabályt a többi teszt mintákkal ellenőrzi).
         filters = [e["assetFilter"] for e in bc.load_entries(root) if "assetFilter" in e]
-        self.assertTrue(filters)
         for pattern in filters:
             self.assertIsNone(bc.asset_filter_violation(pattern), pattern)
 

@@ -1,0 +1,22 @@
+{
+  "id": "ytdlp-studio",
+  "name": "YTDLP Studio",
+  "source": {
+    "provider": "github",
+    "repository": "X1wer/YTDLP-Studio-Android",
+    "repositoryId": 1451150783
+  },
+  "keywords": [
+    "yt-dlp",
+    "video downloader",
+    "youtube",
+    "audio",
+    "subtitles",
+    "playlist",
+    "videóletöltő",
+    "zene",
+    "felirat",
+    "lejátszási lista"
+  ],
+  "category": "multimedia"
+}
