@@ -1,9 +1,35 @@
 {
   "schemaVersion": 1,
-  "catalogSerial": 3,
-  "generatedAt": "2026-11-14T17:09:30Z",
-  "expiresAt": "2027-02-12T17:09:30Z",
+  "catalogSerial": 4,
+  "generatedAt": "2026-11-14T18:29:41Z",
+  "expiresAt": "2027-02-12T18:29:41Z",
   "apps": [
+    {
+      "id": "headphone-alarm",
+      "name": "FülesÉbresztő",
+      "source": {
+        "provider": "github",
+        "repository": "X1wer/HeadphoneAlarm",
+        "repositoryId": 1450285535
+      },
+      "packageName": "hu.ulpifex.fulesebreszto",
+      "signingCertSha256": [
+        "7aa8f53bc27116f891e8539e8f0914918356bbb918e6a0261360552e0d67b3d7"
+      ],
+      "keywords": [
+        "alarm",
+        "alarm clock",
+        "headphones",
+        "headphone alarm",
+        "HeadphoneAlarm",
+        "wake up",
+        "ébresztő",
+        "ébresztőóra",
+        "fülhallgató",
+        "fülhallgatós ébresztő"
+      ],
+      "category": "utilities"
+    },
     {
       "id": "ytdlp-studio",
       "name": "YTDLP Studio",
