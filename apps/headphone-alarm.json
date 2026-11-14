@@ -1,6 +1,6 @@
 {
   "id": "headphone-alarm",
-  "name": "FülesÉbresztő",
+  "name": "Headphone Alarm",
   "source": {
     "provider": "github",
     "repository": "X1wer/HeadphoneAlarm",
@@ -20,6 +20,7 @@
     "ébresztő",
     "ébresztőóra",
     "fülhallgató",
+    "FülesÉbresztő",
     "fülhallgatós ébresztő"
   ],
   "category": "utilities"
