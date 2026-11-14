@@ -14,9 +14,9 @@ files.**
 Android-alkalmazásokról. Egy bejegyzés csak a nevet, a GitHub-repót, kulcsszavakat, kategóriát és opcionális ellenőrző
 adatokat tartalmaz; APK-fájlt a repó nem tárol.
 
-> **Status: not yet published.** The catalog is currently signed with a **test key** (`keys/catalog-test-2026a.pub`).
-> The real signing key will be created when the repository is published; until then RepoShelf release builds cannot be
-> made.
+> **Status:** the catalog is signed with its real key (`keys/catalog-2026a.pub`, ECDSA P-256). The maintainer signs
+> each new `dist` locally with `tools/sign_catalog.py`; the private key never enters this repository. The current
+> catalog expires on 2027-02-12 and must be re-signed before that.
 
 **Being listed in the catalog is not a security certification.** Inclusion is a technical and formal review, not a
 security audit. The apps are made by independent developers.

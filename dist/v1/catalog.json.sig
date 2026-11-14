@@ -2,9 +2,9 @@
   "format": 1,
   "signatures": [
     {
-      "keyId": "catalog-test-2026a",
+      "keyId": "catalog-2026a",
       "algorithm": "ecdsa-p256-sha256",
-      "value": "MEUCIQCZ7Fj8febLcOWH4bCV1eapw5cchhMlne+mSyn6b/xVSAIgQf528LXnsUYmEsk7285URfh71MDfFarPA/WQZ/7ZdFE="
+      "value": "MEYCIQCMbfbsa/NFA1ACY08LJWeawCt9cpPGfO2PqATKiTgI8QIhAKpnbBhP8++lKn6n5fcnis26LYmprz0gbVVZC7H0E+Iq"
     }
   ]
 }

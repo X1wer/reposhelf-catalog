@@ -137,5 +137,6 @@ of the catalog file (`.gitattributes` fixes LF line endings; the `.sig` file is 
   key is no longer trusted, they drop the stored catalog and start again from the built-in one. During a key change the
   catalog must therefore be signed with both keys, and the old key may only be removed from the app after a release that
   knows the new key is widespread.
-- **Currently a test key** (`catalog-test-2026a`) signs the catalog. The real key will be created when the repository is
-  published and kept as a GitHub Actions secret in a protected environment, with an offline backup.
+- **The signing key** is `catalog-2026a` (P-256, since 2026-11-14). The maintainer signs locally; the private key is kept
+  outside the repository with an offline backup. A CI signing workflow (key as a protected environment secret) is
+  possible later; see [SUBMISSION.md](SUBMISSION.md).

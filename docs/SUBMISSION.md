@@ -112,11 +112,12 @@ These are configured in GitHub's settings; the repository content cannot enforce
    on pull requests; the job itself builds `dist` from `apps/`, runs the full validation, signs, verifies, and commits only
    the two `dist` files; the key goes to a temporary file (`umask 077`) deleted by an `if: always()` step, without
    `set -x` or printing the secret; the serial is the previous one + 1; a `concurrency` group prevents parallel runs.
-   *(This workflow does not exist yet; it is created together with the real key.)*
+   *(This workflow does not exist: the maintainer currently signs locally. These rules apply if it is introduced.)*
 6. **Key backup and rotation:** keep an offline backup of the private key; rotation is described in the "Signature"
    section of [SCHEMA.md](SCHEMA.md).
-7. **Before the first public release:** create the real key, replace the test key in `keys/` and in the app's key list,
-   re-sign, and update the app's built-in catalog. (The app's release build intentionally fails with the test key.)
+7. **Real key:** done on 2026-11-14 (`catalog-2026a`); the test key was removed from `keys/` and from the app's key list,
+   the catalog was re-signed (serial 2) and copied into the app as its built-in catalog. After every change to `apps/`:
+   rebuild `dist` with the next serial, sign it locally, and update the app's built-in copy before an app release.
 
 ## What is not accepted?
 
