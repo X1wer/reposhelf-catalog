@@ -1,9 +1,35 @@
 {
   "schemaVersion": 1,
-  "catalogSerial": 5,
-  "generatedAt": "2026-11-14T18:49:28Z",
-  "expiresAt": "2027-02-12T18:49:28Z",
+  "catalogSerial": 6,
+  "generatedAt": "2026-11-15T10:04:28Z",
+  "expiresAt": "2027-02-13T10:04:28Z",
   "apps": [
+    {
+      "id": "card-duel",
+      "name": "Card Duel",
+      "source": {
+        "provider": "github",
+        "repository": "X1wer/Card-Duel",
+        "repositoryId": 1458663730
+      },
+      "packageName": "hu.ulpifex.cardduel",
+      "signingCertSha256": [
+        "13a0011d7ae23d917edc6791dcd0509d125ded24f909fc53912fe4557f2e53f6"
+      ],
+      "keywords": [
+        "card game",
+        "cards",
+        "two players",
+        "offline game",
+        "solitaire",
+        "CardDuel",
+        "kártyajáték",
+        "kártya",
+        "Kártyapárbaj",
+        "kétszemélyes"
+      ],
+      "category": "games"
+    },
     {
       "id": "headphone-alarm",
       "name": "Headphone Alarm",
