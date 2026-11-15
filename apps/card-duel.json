@@ -1,0 +1,26 @@
+{
+  "id": "card-duel",
+  "name": "Card Duel",
+  "source": {
+    "provider": "github",
+    "repository": "X1wer/Card-Duel",
+    "repositoryId": 1458663730
+  },
+  "packageName": "hu.ulpifex.cardduel",
+  "signingCertSha256": [
+    "13a0011d7ae23d917edc6791dcd0509d125ded24f909fc53912fe4557f2e53f6"
+  ],
+  "keywords": [
+    "card game",
+    "cards",
+    "two players",
+    "offline game",
+    "solitaire",
+    "CardDuel",
+    "kártyajáték",
+    "kártya",
+    "Kártyapárbaj",
+    "kétszemélyes"
+  ],
+  "category": "games"
+}
