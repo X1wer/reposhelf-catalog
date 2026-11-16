@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "catalogSerial": 6,
-  "generatedAt": "2026-11-15T10:04:28Z",
-  "expiresAt": "2027-02-13T10:04:28Z",
+  "catalogSerial": 7,
+  "generatedAt": "2026-11-16T20:44:12Z",
+  "expiresAt": "2027-02-14T20:44:12Z",
   "apps": [
     {
       "id": "card-duel",
@@ -56,6 +56,32 @@
         "fülhallgatós ébresztő"
       ],
       "category": "utilities"
+    },
+    {
+      "id": "orotund",
+      "name": "Orotund",
+      "source": {
+        "provider": "github",
+        "repository": "X1wer/Orotund",
+        "repositoryId": 1460513675
+      },
+      "packageName": "io.github.x1wer.szabadzene",
+      "signingCertSha256": [
+        "a2fe58890942add4128696d354796e560ad59ffdfc4ff2742f83546ac354d2b4"
+      ],
+      "keywords": [
+        "music player",
+        "mp3 player",
+        "offline music",
+        "audio player",
+        "playlists",
+        "lyrics",
+        "equalizer",
+        "Zengő",
+        "zenelejátszó",
+        "zene"
+      ],
+      "category": "multimedia"
     },
     {
       "id": "ytdlp-studio",
