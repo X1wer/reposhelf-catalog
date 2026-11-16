@@ -4,7 +4,7 @@
     {
       "keyId": "catalog-2026a",
       "algorithm": "ecdsa-p256-sha256",
-      "value": "MEUCIQCMkT/4pkRUmVXAxXnMLO2fbzsneg0cXqNflH72XUfJwwIgQxZSKN2AYjNu/p9qo87HNHhDaAY23/aMdcwPVuoG4D8="
+      "value": "MEQCICOkFNSHzfJPkMqsrXJyBVJcbfcmRukgZNmwJ9bO3TYTAiAsFA14hDsNYgkocTLoafU+Klb56WmrrLQ7VI94qC+e3Q=="
     }
   ]
 }
